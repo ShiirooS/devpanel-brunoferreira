@@ -22,8 +22,10 @@ Open http://localhost:5173 and sign in:
 | Email | Password |
 |---|---|
 | `admin@devpanel.local` | `Admin123!` |
+| `editor@devpanel.local` | `Admin123!` |
+| `viewer@devpanel.local` | `Admin123!` |
 
-All seeded users share that password (development data only). Useful commands:
+All seeded users share that password (development data only). Roles: **ADMIN** and **EDITOR** see the dashboard and the users table; **VIEWER** only sees the dashboard (`GET /api/users` returns 403). Authorization is enforced in the backend by a global `RolesGuard` that re-reads the role from the database on each protected request, so a demotion applies immediately. Useful commands:
 
 | Command | What it does |
 |---|---|
@@ -42,7 +44,7 @@ Everything lives in one `.env` at the repo root (see `.env.example`, which docum
 | `POST /auth/login` `{email, password}` | 200 `{user}` and sets the session cookie; 401 for any bad credentials |
 | `GET /auth/me` | Current user (used to restore the session on reload) |
 | `POST /auth/logout` | 204, clears the cookie |
-| `GET /users?search&page&pageSize&role&status` | `{data, meta:{page,pageSize,total,totalPages}}`; `pageSize` max 100 |
+| `GET /users?search&page&pageSize&role&status` (ADMIN, EDITOR; VIEWER gets 403) | `{data, meta:{page,pageSize,total,totalPages}}`; `pageSize` max 100 |
 | `GET /dashboard/metrics` | `{totalUsers, activeUsers, newUsersLast30Days, byRole}` |
 
 ## Key technical decisions

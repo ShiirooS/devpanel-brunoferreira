@@ -41,7 +41,23 @@ async function main(): Promise<void> {
         createdAt: new Date(now - 90 * DAY_MS),
         lastLoginAt: new Date(now - DAY_MS),
       },
-      ...Array.from({ length: USER_COUNT - 1 }, (_, i) => {
+      {
+        email: 'editor@devpanel.local',
+        name: 'Editor DevPanel',
+        role: Role.EDITOR,
+        status: UserStatus.ACTIVE,
+        createdAt: new Date(now - 60 * DAY_MS),
+        lastLoginAt: new Date(now - 2 * DAY_MS),
+      },
+      {
+        email: 'viewer@devpanel.local',
+        name: 'Viewer DevPanel',
+        role: Role.VIEWER,
+        status: UserStatus.ACTIVE,
+        createdAt: new Date(now - 45 * DAY_MS),
+        lastLoginAt: new Date(now - 3 * DAY_MS),
+      },
+      ...Array.from({ length: USER_COUNT - 3 }, (_, i) => {
         const first = pick(FIRST_NAMES, i);
         const last = pick(LAST_NAMES, i * 3 + 1);
         return {
