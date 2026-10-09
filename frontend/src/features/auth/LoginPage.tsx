@@ -8,6 +8,9 @@ interface LoginLocationState {
   from?: { pathname: string; search: string };
 }
 
+const INPUT =
+  'mt-1.5 w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5';
+
 function loginErrorMessage(error: unknown): string {
   // The API answers every credential failure with the same 401, and so does the UI.
   if (hasStatus(error, 401)) return 'Email o contraseña incorrectos.';
@@ -43,14 +46,20 @@ export function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-slate-100 px-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
-        <h1 className="text-2xl font-semibold text-slate-900">DevPanel</h1>
-        <p className="mt-1 text-sm text-slate-500">Inicia sesión para continuar</p>
+    <main className="grid min-h-screen place-items-center bg-[radial-gradient(60rem_30rem_at_50%_-10%,var(--color-neutral-200),transparent)] px-4">
+      <div className="w-full max-w-sm animate-fade-up">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <span className="grid size-10 place-items-center rounded-xl bg-neutral-900 text-base font-semibold text-white">D</span>
+          <h1 className="mt-5 text-2xl font-semibold tracking-tight">Bienvenido a DevPanel</h1>
+          <p className="mt-1.5 text-sm text-neutral-500">Inicia sesión para continuar</p>
+        </div>
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        <form
+          className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+          onSubmit={handleSubmit}
+        >
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
               Email
             </label>
             <input
@@ -58,13 +67,14 @@ export function LoginPage() {
               type="email"
               autoComplete="email"
               required
+              placeholder="tu@email.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className={INPUT}
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="password" className="block text-sm font-medium text-neutral-700">
               Contraseña
             </label>
             <input
@@ -72,14 +82,15 @@ export function LoginPage() {
               type="password"
               autoComplete="current-password"
               required
+              placeholder="••••••••"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className={INPUT}
             />
           </div>
 
           {error && (
-            <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p role="alert" className="animate-fade-in rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-2.5 text-sm text-neutral-700">
               {error}
             </p>
           )}
@@ -87,8 +98,9 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
           >
+            {submitting && <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />}
             {submitting ? 'Entrando…' : 'Entrar'}
           </button>
         </form>

@@ -14,8 +14,8 @@ export function SessionGate() {
 
   if (status === 'unknown') {
     return (
-      <div className="grid min-h-screen place-items-center bg-slate-100 text-sm text-slate-500">
-        Cargando sesión…
+      <div className="grid min-h-screen place-items-center" role="status" aria-label="Cargando sesión">
+        <span className="size-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-900" />
       </div>
     );
   }

@@ -1,22 +1,54 @@
 import { isCancel } from 'axios';
 import { useEffect, useState, type ReactNode } from 'react';
 import { ROLE_LABELS } from '../../lib/labels';
+import { useCountUp } from '../../lib/useCountUp';
 import type { DashboardMetrics, Role } from '../../types/api';
 import { fetchMetrics } from './dashboardApi';
 
 const ROLES: Role[] = ['ADMIN', 'EDITOR', 'VIEWER'];
+const CARD = 'rounded-2xl border border-neutral-200 bg-white p-5 animate-fade-up';
 
-function Card({ label, children }: { label: string; children: ReactNode }) {
+function StatCard({ label, value, hint, index }: { label: string; value: number; hint?: string; index: number }) {
+  const shown = useCountUp(value);
   return (
-    <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <div className="mt-2">{children}</div>
+    <div className={CARD} style={{ animationDelay: `${index * 70}ms` }}>
+      <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">{label}</p>
+      <p className="mt-3 text-4xl font-semibold tabular-nums tracking-tight">{shown}</p>
+      {hint && <p className="mt-1 text-sm text-neutral-500">{hint}</p>}
     </div>
   );
 }
 
-function Value({ children }: { children: ReactNode }) {
-  return <p className="text-3xl font-semibold tabular-nums text-slate-900">{children}</p>;
+function RoleCard({ byRole, total, index }: { byRole: Record<Role, number>; total: number; index: number }) {
+  return (
+    <div className={CARD} style={{ animationDelay: `${index * 70}ms` }}>
+      <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">Por rol</p>
+      <dl className="mt-4 space-y-3">
+        {ROLES.map((role) => (
+          <div key={role}>
+            <div className="flex justify-between text-sm">
+              <dt className="text-neutral-600">{ROLE_LABELS[role]}</dt>
+              <dd className="font-medium tabular-nums">{byRole[role]}</dd>
+            </div>
+            <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-neutral-100">
+              <div
+                className="h-full origin-left rounded-full bg-neutral-900 animate-grow-x"
+                style={{ width: `${total > 0 ? (byRole[role] / total) * 100 : 0}%`, animationDelay: `${300 + index * 70}ms` }}
+              />
+            </div>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+function Shell({ children, busy }: { children: ReactNode; busy?: boolean }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-busy={busy}>
+      {children}
+    </div>
+  );
 }
 
 export function MetricsCards() {
@@ -35,7 +67,7 @@ export function MetricsCards() {
 
   if (error) {
     return (
-      <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
+      <p role="alert" className="rounded-2xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600">
         No se pudieron cargar las métricas.
       </p>
     );
@@ -43,39 +75,22 @@ export function MetricsCards() {
 
   if (!metrics) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-busy="true">
+      <Shell busy>
         {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="h-28 animate-pulse rounded-xl bg-slate-200" />
+          <div key={index} className="h-32 animate-pulse rounded-2xl bg-neutral-200/60" />
         ))}
-      </div>
+      </Shell>
     );
   }
 
-  const activeShare =
-    metrics.totalUsers > 0 ? Math.round((metrics.activeUsers / metrics.totalUsers) * 100) : 0;
+  const activeShare = metrics.totalUsers > 0 ? Math.round((metrics.activeUsers / metrics.totalUsers) * 100) : 0;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <Card label="Usuarios totales">
-        <Value>{metrics.totalUsers}</Value>
-      </Card>
-      <Card label="Usuarios activos">
-        <Value>{metrics.activeUsers}</Value>
-        <p className="mt-1 text-sm text-slate-500">{activeShare}% del total</p>
-      </Card>
-      <Card label="Nuevos (últimos 30 días)">
-        <Value>{metrics.newUsersLast30Days}</Value>
-      </Card>
-      <Card label="Usuarios por rol">
-        <dl className="space-y-1 text-sm">
-          {ROLES.map((role) => (
-            <div key={role} className="flex justify-between">
-              <dt className="text-slate-600">{ROLE_LABELS[role]}</dt>
-              <dd className="font-semibold tabular-nums text-slate-900">{metrics.byRole[role]}</dd>
-            </div>
-          ))}
-        </dl>
-      </Card>
-    </div>
+    <Shell>
+      <StatCard index={0} label="Usuarios" value={metrics.totalUsers} hint="Total registrados" />
+      <StatCard index={1} label="Activos" value={metrics.activeUsers} hint={`${activeShare}% del total`} />
+      <StatCard index={2} label="Nuevos" value={metrics.newUsersLast30Days} hint="Últimos 30 días" />
+      <RoleCard index={3} byRole={metrics.byRole} total={metrics.totalUsers} />
+    </Shell>
   );
 }

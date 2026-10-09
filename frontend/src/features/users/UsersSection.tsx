@@ -8,8 +8,10 @@ import { UsersTable } from './UsersTable';
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
-const FILTER_CLASSES =
-  'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200';
+const CONTROL =
+  'rounded-xl border border-neutral-200 bg-white px-3.5 py-2 text-sm outline-none transition focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5';
+const PAGER_BUTTON =
+  'rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent';
 
 export function UsersSection() {
   const [searchInput, setSearchInput] = useState('');
@@ -46,24 +48,50 @@ export function UsersSection() {
   const totalPages = Math.max(meta?.totalPages ?? 1, 1);
 
   return (
-    <section className="rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-      <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold">Usuarios</h2>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+    <section
+      className="overflow-hidden rounded-2xl border border-neutral-200 bg-white animate-fade-up"
+      style={{ animationDelay: '320ms' }}
+    >
+      <div className="flex flex-col gap-3 p-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-base font-semibold tracking-tight">Usuarios</h2>
+          {loading && result && (
+            <span
+              role="status"
+              aria-label="Actualizando"
+              className="size-3.5 animate-spin rounded-full border-2 border-neutral-200 border-t-neutral-700"
+            />
+          )}
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
           <label htmlFor="user-search" className="sr-only">
             Buscar usuarios por nombre o email
           </label>
-          <input
-            id="user-search"
-            type="search"
-            value={searchInput}
-            onChange={(event) => {
-              setSearchInput(event.target.value);
-              setPage(1);
-            }}
-            placeholder="Buscar por nombre o email…"
-            className={`${FILTER_CLASSES} sm:w-64`}
-          />
+          <div className="relative sm:w-64">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400"
+            >
+              <circle cx="9" cy="9" r="5.5" />
+              <path d="m13.5 13.5 3 3" />
+            </svg>
+            <input
+              id="user-search"
+              type="search"
+              value={searchInput}
+              onChange={(event) => {
+                setSearchInput(event.target.value);
+                setPage(1);
+              }}
+              placeholder="Buscar por nombre o email"
+              className={`${CONTROL} w-full pl-9`}
+            />
+          </div>
           <label htmlFor="user-role" className="sr-only">
             Filtrar por rol
           </label>
@@ -74,7 +102,7 @@ export function UsersSection() {
               setRole(event.target.value as Role | '');
               setPage(1);
             }}
-            className={FILTER_CLASSES}
+            className={CONTROL}
           >
             <option value="">Todos los roles</option>
             {(Object.keys(ROLE_LABELS) as Role[]).map((value) => (
@@ -93,7 +121,7 @@ export function UsersSection() {
               setStatus(event.target.value as UserStatus | '');
               setPage(1);
             }}
-            className={FILTER_CLASSES}
+            className={CONTROL}
           >
             <option value="">Todos los estados</option>
             {(Object.keys(STATUS_LABELS) as UserStatus[]).map((value) => (
@@ -106,26 +134,31 @@ export function UsersSection() {
       </div>
 
       {error && (
-        <p role="alert" className="m-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p
+          role="alert"
+          className="mx-5 mb-5 animate-fade-in rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-2.5 text-sm text-neutral-700"
+        >
           No se pudieron cargar los usuarios.
         </p>
       )}
 
       {!error && !result && loading && (
-        <p className="p-8 text-center text-sm text-slate-500" aria-busy="true">
-          Cargando usuarios…
-        </p>
+        <div className="space-y-px" aria-busy="true">
+          {Array.from({ length: 5 }, (_, index) => (
+            <div key={index} className="mx-5 mb-3 h-11 animate-pulse rounded-lg bg-neutral-100" />
+          ))}
+        </div>
       )}
 
       {!error && result && users.length === 0 && !loading && (
-        <p className="p-8 text-center text-sm text-slate-500">
+        <p className="animate-fade-in px-5 py-12 text-center text-sm text-neutral-500">
           {search || role || status ? 'Sin resultados con estos filtros.' : 'No hay usuarios.'}
         </p>
       )}
 
       {result && users.length > 0 && (
         // Keep the previous rows on screen (dimmed) while the next page or search loads.
-        <div className={loading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
+        <div className={`border-t border-neutral-200 transition-opacity ${loading ? 'opacity-50' : ''}`}>
           <UsersTable users={users} />
         </div>
       )}
@@ -133,9 +166,9 @@ export function UsersSection() {
       {meta && (
         <nav
           aria-label="Paginación"
-          className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-sm"
+          className="flex items-center justify-between border-t border-neutral-200 px-5 py-3 text-sm"
         >
-          <p className="text-slate-500">
+          <p className="text-neutral-500">
             {meta.total} {meta.total === 1 ? 'usuario' : 'usuarios'} · Página {meta.page} de {totalPages}
           </p>
           <div className="flex gap-2">
@@ -143,7 +176,7 @@ export function UsersSection() {
               type="button"
               onClick={() => setPage((current) => current - 1)}
               disabled={page <= 1}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className={PAGER_BUTTON}
             >
               Anterior
             </button>
@@ -151,7 +184,7 @@ export function UsersSection() {
               type="button"
               onClick={() => setPage((current) => current + 1)}
               disabled={page >= totalPages}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className={PAGER_BUTTON}
             >
               Siguiente
             </button>
