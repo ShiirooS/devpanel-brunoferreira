@@ -1,15 +1,20 @@
 import { isCancel } from 'axios';
 import { useEffect, useState } from 'react';
+import { ROLE_LABELS, STATUS_LABELS } from '../../lib/labels';
 import { useDebouncedValue } from '../../lib/useDebouncedValue';
-import type { UsersPage } from '../../types/api';
+import type { Role, UsersPage, UserStatus } from '../../types/api';
 import { fetchUsers } from './usersApi';
 import { UsersTable } from './UsersTable';
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
+const FILTER_CLASSES =
+  'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200';
 
 export function UsersSection() {
   const [searchInput, setSearchInput] = useState('');
+  const [role, setRole] = useState<Role | ''>('');
+  const [status, setStatus] = useState<UserStatus | ''>('');
   const [page, setPage] = useState(1);
   const [result, setResult] = useState<UsersPage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +28,7 @@ export function UsersSection() {
     const controller = new AbortController();
     setLoading(true);
     setError(false);
-    fetchUsers({ search, page, pageSize: PAGE_SIZE }, controller.signal)
+    fetchUsers({ search, page, pageSize: PAGE_SIZE, role, status }, controller.signal)
       .then((data) => {
         setResult(data);
         setLoading(false);
@@ -34,7 +39,7 @@ export function UsersSection() {
         setLoading(false);
       });
     return () => controller.abort();
-  }, [search, page]);
+  }, [search, page, role, status]);
 
   const users = result?.data ?? [];
   const meta = result?.meta;
@@ -44,7 +49,7 @@ export function UsersSection() {
     <section className="rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
       <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold">Usuarios</h2>
-        <div className="w-full sm:max-w-xs">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <label htmlFor="user-search" className="sr-only">
             Buscar usuarios por nombre o email
           </label>
@@ -57,8 +62,46 @@ export function UsersSection() {
               setPage(1);
             }}
             placeholder="Buscar por nombre o email…"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            className={`${FILTER_CLASSES} sm:w-64`}
           />
+          <label htmlFor="user-role" className="sr-only">
+            Filtrar por rol
+          </label>
+          <select
+            id="user-role"
+            value={role}
+            onChange={(event) => {
+              setRole(event.target.value as Role | '');
+              setPage(1);
+            }}
+            className={FILTER_CLASSES}
+          >
+            <option value="">Todos los roles</option>
+            {(Object.keys(ROLE_LABELS) as Role[]).map((value) => (
+              <option key={value} value={value}>
+                {ROLE_LABELS[value]}
+              </option>
+            ))}
+          </select>
+          <label htmlFor="user-status" className="sr-only">
+            Filtrar por estado
+          </label>
+          <select
+            id="user-status"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value as UserStatus | '');
+              setPage(1);
+            }}
+            className={FILTER_CLASSES}
+          >
+            <option value="">Todos los estados</option>
+            {(Object.keys(STATUS_LABELS) as UserStatus[]).map((value) => (
+              <option key={value} value={value}>
+                {STATUS_LABELS[value]}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -76,7 +119,7 @@ export function UsersSection() {
 
       {!error && result && users.length === 0 && !loading && (
         <p className="p-8 text-center text-sm text-slate-500">
-          {search ? `Sin resultados para “${search}”.` : 'No hay usuarios.'}
+          {search || role || status ? 'Sin resultados con estos filtros.' : 'No hay usuarios.'}
         </p>
       )}
 
