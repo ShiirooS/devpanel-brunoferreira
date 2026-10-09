@@ -15,3 +15,7 @@ export async function fetchCurrentUser(): Promise<User> {
   const { data } = await http.get<{ user: User }>('/auth/me');
   return data.user;
 }
+
+export async function logout(): Promise<void> {
+  await http.post('/auth/logout');
+}
