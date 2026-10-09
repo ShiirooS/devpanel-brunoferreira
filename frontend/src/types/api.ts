@@ -10,3 +10,10 @@ export interface User {
   role: Role;
   status: UserStatus;
 }
+
+export interface DashboardMetrics {
+  totalUsers: number;
+  activeUsers: number;
+  newUsersLast30Days: number;
+  byRole: Record<Role, number>;
+}
