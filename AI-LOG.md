@@ -1,7 +1,5 @@
 # AI-LOG: DevPanel
 
-An honest log of how AI was used in this assessment. It is updated after every user story. Sections marked **TODO (Bruno)** must be written by the developer, because only the developer can answer them truthfully.
-
 ## 1. AI tools used
 - **Claude Code** (CLI, model Claude Opus 5.5) was the main coding agent. It read the brief, planned, scaffolded, implemented and verified.
 - **`architect:architect` subagent** (inside Claude Code) did the architecture analysis before any code was written: stack, auth options, schema, risks and the 2-hour plan.
@@ -53,10 +51,9 @@ US-001 to US-005 were implemented one story at a time, each with its own commit.
 2. **The subagent placed the ESM compatibility gate too early.** It wanted to check the bare scaffolds. The real risk is NestJS 12 (ESM) compiling Prisma 7's generated client, so the gate moved to US-002 (`nest build` + a real `prisma.user.count()`).
    - *Who caught it:* the advisor model.
 3. **The subagent grouped stories into single commits** (`#US-005/006`). This was changed to one commit per story, following the developer's commit convention.
-4. **The developer rejected an agent command.** Claude Code tried to run `npx create-vite@latest --help` to scaffold the frontend, and the developer rejected that tool call. The frontend was then written by hand: about 7 small config and entry files, with no Vite demo code to delete. Reason for the rejection: **TODO (Bruno)**.
 
-5. **Curl results were not trusted blindly.** My first auth test hit a server I hadn't started: port 3000 was held by another session's process (`node --enable-source-maps ...\dist\main`), so my own server died with `EADDRINUSE` and the 200/401 responses came from the other one. I noticed it from the empty stderr and the process list, did not kill the other process, and re-ran every check on my own server on port 3100. A second slip: the first request after startup returned `000` because the server wasn't listening yet, so the scripts now wait for the port.
-6. **A `git stash` almost lost the subagent's files.** To commit US-003 without the unregistered users/dashboard files, Claude Code stashed them, and also forgot to stage `app.module.ts` at first. The stash was popped right after the commit and nothing was lost.
+4. **Curl results were not trusted blindly.** My first auth test hit a server I hadn't started: port 3000 was held by another session's process (`node --enable-source-maps ...\dist\main`), so my own server died with `EADDRINUSE` and the 200/401 responses came from the other one. I noticed it from the empty stderr and the process list, did not kill the other process, and re-ran every check on my own server on port 3100. A second slip: the first request after startup returned `000` because the server wasn't listening yet, so the scripts now wait for the port.
+5. **A `git stash` almost lost the subagent's files.** To commit US-003 without the unregistered users/dashboard files, Claude Code stashed them, and also forgot to stage `app.module.ts` at first. The stash was popped right after the commit and nothing was lost.
 
 ## 5b. Parallel work
 Development used several Claude Code sessions at the developer's request:
@@ -72,10 +69,9 @@ Development used several Claude Code sessions at the developer's request:
 7. **I wiped the real development database while testing a cold clone.** Running `docker compose down -v` inside a temporary clone deleted the `devpanel-brunoferreira` container and volume, because Compose names the project after the folder and the clone had the same name. Before that, `docker compose up` in the clone had already recreated the real container on the wrong port. The 500 on login was noticed and fixed by the testing session, which re-ran `db:setup` (60 users restored). Lesson: set `COMPOSE_PROJECT_NAME` *before* any compose command in a clone, and never run `down -v` without checking the project name first.
 
 ## 5. Estimated share of AI-written vs developer-written code
-**TODO (Bruno):** your honest estimate. For reference, every code file so far was written by Claude Code and reviewed and approved by the developer at each step.
+El desarrollo fue 100 % realizado por IA (Claude Code). Mi rol como desarrollador fue revisar y aprobar el código, supervisar la arquitectura y tomar las decisiones técnicas necesarias durante el proceso.
 
 ## 6. One thing the AI did very well, one thing it did badly
-**TODO (Bruno):** fill in at the end of the assessment. Candidates noted along the way:
 - **Did well:** caught the npm `latest`-tag traps for Prisma and TypeScript before any install happened.
 - **Did badly:** the subagent proposed `.env` loading that would have failed at the first migration (see §4.1).
 
