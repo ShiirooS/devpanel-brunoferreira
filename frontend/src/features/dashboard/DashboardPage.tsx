@@ -1,7 +1,11 @@
+import { useAuthStore } from '../auth/authStore';
 import { UsersSection } from '../users/UsersSection';
 import { MetricsCards } from './MetricsCards';
 
 export function DashboardPage() {
+  // VIEWER only sees the dashboard: the API answers 403 on /users for that role.
+  const canSeeUsers = useAuthStore((state) => state.user?.role !== 'VIEWER');
+
   return (
     <div className="space-y-10">
       <section className="space-y-6">
@@ -11,7 +15,7 @@ export function DashboardPage() {
         </div>
         <MetricsCards />
       </section>
-      <UsersSection />
+      {canSeeUsers && <UsersSection />}
     </div>
   );
 }

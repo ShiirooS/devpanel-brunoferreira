@@ -1,5 +1,6 @@
 import { isCancel } from 'axios';
 import { useEffect, useState } from 'react';
+import { hasStatus } from '../../lib/http';
 import { ROLE_LABELS, STATUS_LABELS } from '../../lib/labels';
 import { useDebouncedValue } from '../../lib/useDebouncedValue';
 import type { Role, UsersPage, UserStatus } from '../../types/api';
@@ -20,7 +21,7 @@ export function UsersSection() {
   const [page, setPage] = useState(1);
   const [result, setResult] = useState<UsersPage | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<'forbidden' | 'failed' | null>(null);
 
   // The request only follows the debounced text, so typing fast sends one call.
   const search = useDebouncedValue(searchInput.trim(), SEARCH_DEBOUNCE_MS);
@@ -29,7 +30,7 @@ export function UsersSection() {
     // Aborting on cleanup means a slow, stale response can never overwrite a newer one.
     const controller = new AbortController();
     setLoading(true);
-    setError(false);
+    setError(null);
     fetchUsers({ search, page, pageSize: PAGE_SIZE, role, status }, controller.signal)
       .then((data) => {
         setResult(data);
@@ -37,7 +38,8 @@ export function UsersSection() {
       })
       .catch((fetchError: unknown) => {
         if (isCancel(fetchError)) return;
-        setError(true);
+        // A 403 is a permission answer, not a dead session: only a 401 logs the user out.
+        setError(hasStatus(fetchError, 403) ? 'forbidden' : 'failed');
         setLoading(false);
       });
     return () => controller.abort();
@@ -138,7 +140,9 @@ export function UsersSection() {
           role="alert"
           className="mx-5 mb-5 animate-fade-in rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-2.5 text-sm text-neutral-700"
         >
-          No se pudieron cargar los usuarios.
+          {error === 'forbidden'
+            ? 'No tienes permisos para ver la lista de usuarios.'
+            : 'No se pudieron cargar los usuarios.'}
         </p>
       )}
 
