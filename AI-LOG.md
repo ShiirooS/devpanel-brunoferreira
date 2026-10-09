@@ -61,9 +61,15 @@ US-001 to US-005 were implemented one story at a time, each with its own commit.
 ## 5b. Parallel work
 Development used several Claude Code sessions at the developer's request:
 - This session: `backend/` plus the root files and docs.
-- A second session: `frontend/`, on its own git worktree and branch, merged into `main` with fast-forward only. Its prompts and rejected suggestions are to be added here when it hands them over.
-- A third session: curl and Postgres checks only.
+- A second session: `frontend/` (US-004 to US-008, plus the P2 role/status filters), on its own git worktree and branch, merged into `main` with fast-forward only and pushed one commit at a time.
+  - **Prompt that started it:** the developer asked to work in parallel with another session, and the work was split backend / frontend. A reviewer model corrected the split: don't launch a duplicate backend agent, and use a worktree because of the risks of `git add -A`, the root build and `index.lock`.
+  - **Modified/rejected:** a 401 from `/auth/login` does not clear the session (it only shows "incorrect email or password"). The pagination UI, which belongs to US-007, landed inside the US-006 commit.
+  - **Verified by the session:** login, `/users` and metrics via curl, directly and through the Vite proxy. **Not verified in a browser:** login + F5, the debounce in the Network tab, logout and expiry, which the developer must check.
+  - The filters were built because time was left over (they were the first item on the cut list).
+- A third session: curl and Postgres checks, and a README fix for the Node version requirement.
 - A Sonnet 5.5 subagent: the backend `users` and `dashboard` modules (see §7).
+
+7. **I wiped the real development database while testing a cold clone.** Running `docker compose down -v` inside a temporary clone deleted the `devpanel-brunoferreira` container and volume, because Compose names the project after the folder and the clone had the same name. Before that, `docker compose up` in the clone had already recreated the real container on the wrong port. The 500 on login was noticed and fixed by the testing session, which re-ran `db:setup` (60 users restored). Lesson: set `COMPOSE_PROJECT_NAME` *before* any compose command in a clone, and never run `down -v` without checking the project name first.
 
 ## 5. Estimated share of AI-written vs developer-written code
 **TODO (Bruno):** your honest estimate. For reference, every code file so far was written by Claude Code and reviewed and approved by the developer at each step.
@@ -80,4 +86,5 @@ Development used several Claude Code sessions at the developer's request:
 | 19:20–19:40 | US-002 | The ESM gate passed (`nest build` + a real `prisma.user.count()` returned 60), so the fallback to Nest 11 was not needed. The seed is idempotent: running `db:setup` twice leaves 60 rows. The root `.env` is loaded by explicit path (see §4.1). |
 | 19:40–19:55 | US-003 | Auth written by Claude Code. Verified with curl: login 200, wrong password and unknown email return the same 401, invalid body 400, `/me` with no or tampered cookie 401, `/me` with cookie 200. The `Set-Cookie` header carries `HttpOnly; SameSite=Lax; Max-Age=3600`. |
 | 19:45–19:58 | US-005/006 back | **Delegated to a Sonnet 5.5 subagent** (`users` and `dashboard` modules, with explicit rules: new files only, no git). Claude Code reviewed the code before registering it. Verified with curl: metrics 60/37/19, `search=ANA` returns 4, `pageSize=500` and `role=BOGUS` return 400, and `passwordHash` never appears. |
+| 20:00–20:15 | US-009 | **Cold clone** of `origin/main` (`07a13e1`) into a temp folder, following the README: `cp .env.example .env`, `npm run setup` ended with exit 0, 60 users seeded and `npm run build` passed. It took **144 s with a warm npm cache**. My first attempt took 444 s and failed (port 5434 was taken by another session), so the "under 5 minutes" claim is verified only for the warm-cache case. To avoid port clashes the clone ran with `POSTGRES_PORT=5435` and its own compose project name. The app itself was not opened in a browser. |
 | 19:04–19:16 | US-001 | The `nest new` scaffold failed on `npm install` with an npm arborist crash (`Cannot read properties of null (reading 'edgesOut')`) in vitest 4's peer set. Fixed by bumping vitest to ^5.0.3 and removing the unused `@nestjs/mau` and `@vitest/coverage-v8`. The `no-explicit-any` lint rule was switched from `off` to `error`. Frontend written by hand. Both builds and lint pass; the backend boots. |
