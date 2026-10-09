@@ -1,6 +1,6 @@
 # DevPanel: plan de arquitectura y ejecución (Fase 1, pendiente de aprobación)
 
-> **Origen.** Este plan combina el PDF (fuente autoritativa), el XML de instrucciones (preferencias del dev) y el informe del subagente `nassa-architect:architect` (`02-architect-report.md`). Las discrepancias con el subagente están resueltas de forma explícita en la §11.
+> **Origen.** Este plan combina el PDF (fuente autoritativa), el XML de instrucciones (preferencias del dev) y el informe del subagente `architect:architect` (`02-architect-report.md`). Las discrepancias con el subagente están resueltas de forma explícita en la §11.
 > **Etiquetas.** `[PDF]` marca un requisito del examen, `[XML]` una preferencia del dev y `[REC]` una recomendación.
 
 ## 1. Resumen del examen

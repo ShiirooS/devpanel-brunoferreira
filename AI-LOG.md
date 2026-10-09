@@ -4,7 +4,7 @@ An honest log of how AI was used in this assessment. It is updated after every u
 
 ## 1. AI tools used
 - **Claude Code** (CLI, model Claude Opus 5.5) was the main coding agent. It read the brief, planned, scaffolded, implemented and verified.
-- **`nassa-architect:architect` subagent** (inside Claude Code) did the architecture analysis before any code was written: stack, auth options, schema, risks and the 2-hour plan.
+- **`architect:architect` subagent** (inside Claude Code) did the architecture analysis before any code was written: stack, auth options, schema, risks and the 2-hour plan.
 - **Claude Code "advisor"** is a second reviewer model that Claude Code consulted before committing to the plan and before each delivery. Two of the corrections it made are recorded in §4.
 - **Context given to the agent:**
   - `docs/ai/devpanel-claude-prompt.xml`: the developer's own long instruction file.

@@ -1,6 +1,6 @@
 # Architect subagent report (lightly reformatted copy; content unchanged)
 
-- Subagent: `nassa-architect:architect` (Claude Code), launched 2026-10-08 with the prompt in `01-architect-prompt.md`.
+- Subagent: `architect:architect` (Claude Code), launched 2026-10-08 with the prompt in `01-architect-prompt.md`.
 - Mid-run update sent to it: "Docker Desktop daemon is now running".
 - Version claims re-checked by the main session with `npm view <pkg> dist-tags` on 2026-10-08. All confirmed: prisma latest=8.0.0-rc.22, @prisma/client latest=7.10.0, typescript latest=7.0.2, @nestjs/cli 12.0.8 depends on typescript ~6.0.2, @nestjs/core latest=12.1.2 (legacy=11.2.7, `"type": "module"`), react-router latest=8.4.0 / version-7=7.18.4, vite 8.3.4, tailwindcss 4.3.3, zustand 5.0.15, axios 1.20.0, argon2 0.45.1.
 
