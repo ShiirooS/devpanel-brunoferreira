@@ -6,7 +6,12 @@ import { PrismaClient, Role, UserStatus } from '../src/generated/prisma/client.j
 
 config({ path: path.resolve(process.cwd(), '..', '.env'), quiet: true });
 
-const DEV_PASSWORD = 'Admin123!';
+// Development-only credentials, one per role (documented in README.md).
+const PASSWORDS: Record<Role, string> = {
+  [Role.ADMIN]: 'Admin123!',
+  [Role.EDITOR]: 'Editor9876!',
+  [Role.VIEWER]: 'Viewer12345!',
+};
 const USER_COUNT = 60;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -28,8 +33,12 @@ async function main(): Promise<void> {
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
   try {
-    // Hash once and reuse: argon2 is deliberately slow and every seeded user shares the dev password.
-    const passwordHash = await argon2.hash(DEV_PASSWORD, { type: argon2.argon2id });
+    // Hash once per role and reuse: argon2 is deliberately slow.
+    const hashes = {
+      [Role.ADMIN]: await argon2.hash(PASSWORDS[Role.ADMIN], { type: argon2.argon2id }),
+      [Role.EDITOR]: await argon2.hash(PASSWORDS[Role.EDITOR], { type: argon2.argon2id }),
+      [Role.VIEWER]: await argon2.hash(PASSWORDS[Role.VIEWER], { type: argon2.argon2id }),
+    };
     const now = Date.now();
 
     const seedUsers = [
@@ -77,14 +86,19 @@ async function main(): Promise<void> {
     ];
 
     for (const user of seedUsers) {
+      const passwordHash = hashes[user.role];
       await prisma.user.upsert({
         where: { email: user.email },
-        update: {},
+        // Re-applies the role password, so changing PASSWORDS and re-running the seed takes effect.
+        update: { passwordHash },
         create: { ...user, passwordHash },
       });
     }
 
-    console.log(`Seed complete: ${await prisma.user.count()} users (admin: admin@devpanel.local / ${DEV_PASSWORD})`);
+    console.log(
+      `Seed complete: ${await prisma.user.count()} users (admin@devpanel.local / ${PASSWORDS[Role.ADMIN]}, ` +
+        `editor@devpanel.local / ${PASSWORDS[Role.EDITOR]}, viewer@devpanel.local / ${PASSWORDS[Role.VIEWER]})`,
+    );
   } finally {
     await prisma.$disconnect();
   }
