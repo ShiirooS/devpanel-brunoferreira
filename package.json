@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "description": "DevPanel - mini admin dashboard (technical assessment)",
   "scripts": {
-    "setup": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "setup": "npm install && npm --prefix backend install && npm --prefix frontend install && docker compose up -d --wait && npm --prefix backend run db:setup",
+    "db:setup": "docker compose up -d --wait && npm --prefix backend run db:setup",
     "dev": "concurrently -k -n api,web -c blue,green \"npm --prefix backend run start:dev\" \"npm --prefix frontend run dev\"",
     "build": "npm --prefix backend run build && npm --prefix frontend run build",
     "lint": "npm --prefix backend run lint && npm --prefix frontend run lint"

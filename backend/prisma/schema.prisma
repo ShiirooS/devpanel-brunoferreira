@@ -1,0 +1,43 @@
+// Prisma 7: the connection URL lives in prisma.config.ts, not here.
+// The client is generated as ESM TypeScript into src/ so `nest build` compiles it
+// alongside the app; `.js` import suffixes keep it valid under NodeNext resolution.
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model User {
+  id           String     @id @default(uuid())
+  /// Always stored lowercased; uniqueness is enforced by the database.
+  email        String     @unique
+  name         String
+  passwordHash String     @map("password_hash")
+  role         Role       @default(VIEWER)
+  status       UserStatus @default(ACTIVE)
+  lastLoginAt  DateTime?  @map("last_login_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@index([role])
+  @@index([status])
+  @@index([createdAt])
+  @@map("users")
+}
