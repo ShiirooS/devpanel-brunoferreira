@@ -55,6 +55,16 @@ US-001 to US-005 were implemented one story at a time, each with its own commit.
 3. **The subagent grouped stories into single commits** (`#US-005/006`). This was changed to one commit per story, following the developer's commit convention.
 4. **The developer rejected an agent command.** Claude Code tried to run `npx create-vite@latest --help` to scaffold the frontend, and the developer rejected that tool call. The frontend was then written by hand: about 7 small config and entry files, with no Vite demo code to delete. Reason for the rejection: **TODO (Bruno)**.
 
+5. **Curl results were not trusted blindly.** My first auth test hit a server I hadn't started: port 3000 was held by another session's process (`node --enable-source-maps ...\dist\main`), so my own server died with `EADDRINUSE` and the 200/401 responses came from the other one. I noticed it from the empty stderr and the process list, did not kill the other process, and re-ran every check on my own server on port 3100. A second slip: the first request after startup returned `000` because the server wasn't listening yet, so the scripts now wait for the port.
+6. **A `git stash` almost lost the subagent's files.** To commit US-003 without the unregistered users/dashboard files, Claude Code stashed them, and also forgot to stage `app.module.ts` at first. The stash was popped right after the commit and nothing was lost.
+
+## 5b. Parallel work
+Development used several Claude Code sessions at the developer's request:
+- This session: `backend/` plus the root files and docs.
+- A second session: `frontend/`, on its own git worktree and branch, merged into `main` with fast-forward only. Its prompts and rejected suggestions are to be added here when it hands them over.
+- A third session: curl and Postgres checks only.
+- A Sonnet 5.5 subagent: the backend `users` and `dashboard` modules (see §7).
+
 ## 5. Estimated share of AI-written vs developer-written code
 **TODO (Bruno):** your honest estimate. For reference, every code file so far was written by Claude Code and reviewed and approved by the developer at each step.
 
@@ -67,4 +77,7 @@ US-001 to US-005 were implemented one story at a time, each with its own commit.
 | Time | Story | What happened |
 |---|---|---|
 | 19:03 | — | Plan approved; the 2-hour clock starts. |
+| 19:20–19:40 | US-002 | The ESM gate passed (`nest build` + a real `prisma.user.count()` returned 60), so the fallback to Nest 11 was not needed. The seed is idempotent: running `db:setup` twice leaves 60 rows. The root `.env` is loaded by explicit path (see §4.1). |
+| 19:40–19:55 | US-003 | Auth written by Claude Code. Verified with curl: login 200, wrong password and unknown email return the same 401, invalid body 400, `/me` with no or tampered cookie 401, `/me` with cookie 200. The `Set-Cookie` header carries `HttpOnly; SameSite=Lax; Max-Age=3600`. |
+| 19:45–19:58 | US-005/006 back | **Delegated to a Sonnet 5.5 subagent** (`users` and `dashboard` modules, with explicit rules: new files only, no git). Claude Code reviewed the code before registering it. Verified with curl: metrics 60/37/19, `search=ANA` returns 4, `pageSize=500` and `role=BOGUS` return 400, and `passwordHash` never appears. |
 | 19:04–19:16 | US-001 | The `nest new` scaffold failed on `npm install` with an npm arborist crash (`Cannot read properties of null (reading 'edgesOut')`) in vitest 4's peer set. Fixed by bumping vitest to ^5.0.3 and removing the unused `@nestjs/mau` and `@vitest/coverage-v8`. The `no-explicit-any` lint rule was switched from `off` to `error`. Frontend written by hand. Both builds and lint pass; the backend boots. |
