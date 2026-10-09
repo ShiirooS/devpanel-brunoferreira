@@ -19,13 +19,13 @@ npm run dev              # API on :3000 and web on :5173
 ```
 Open http://localhost:5173 and sign in:
 
-| Email | Password |
-|---|---|
-| `admin@devpanel.local` | `Admin123!` |
-| `editor@devpanel.local` | `Admin123!` |
-| `viewer@devpanel.local` | `Admin123!` |
+| Role | Email | Password |
+|---|---|---|
+| ADMIN | `admin@devpanel.local` | `Admin123!` |
+| EDITOR | `editor@devpanel.local` | `Editor9876!` |
+| VIEWER | `viewer@devpanel.local` | `Viewer12345!` |
 
-All seeded users share that password (development data only). Roles: **ADMIN** and **EDITOR** see the dashboard and the users table; **VIEWER** only sees the dashboard (`GET /api/users` returns 403). Authorization is enforced in the backend by a global `RolesGuard` that re-reads the role from the database on each protected request, so a demotion applies immediately. Useful commands:
+The seed creates 62 users. **Every seeded user has the password of their role** (all ADMINs use `Admin123!`, all EDITORs `Editor9876!`, all VIEWERs `Viewer12345!`); only ACTIVE users can sign in (development data only). Roles: **ADMIN** and **EDITOR** see the dashboard and the users table; **VIEWER** only sees the dashboard (`GET /api/users` returns 403). Authorization is enforced in the backend by a global `RolesGuard` that re-reads the role from the database on each protected request, so a demotion applies immediately. Useful commands:
 
 | Command | What it does |
 |---|---|
@@ -34,6 +34,25 @@ All seeded users share that password (development data only). Roles: **ADMIN** a
 | `docker compose down` | Stops Postgres (data is kept); add `-v` to wipe it |
 
 **Troubleshooting:** if `npm run setup` says it can't reach Docker, start Docker Desktop and run it again. If port 5433 is taken, change `POSTGRES_PORT` and the port in `DATABASE_URL` in `.env`.
+
+## Docker
+Only PostgreSQL runs in Docker (`docker-compose.yml`, one service called `db`). You never run a Docker command by hand for the normal flow: `npm run setup` runs `docker compose up -d --wait`, which **downloads the `postgres:17-alpine` image the first time** (about 100 MB, no build step), creates the container and waits until its healthcheck passes before migrating and seeding.
+- **Port and credentials:** host port `5433` maps to `5432` in the container; user, password and database come from `.env` (defaults `devpanel`).
+- **Data:** stored in the named volume `devpanel-db-data`, so it survives `docker compose down` and restarts.
+- **Useful commands:** `docker compose ps` (state), `docker compose logs db`, `docker compose exec db psql -U devpanel -d devpanel` (SQL shell), `docker compose down` (stop, keep data), `docker compose down -v` (stop and **delete** the data; run `npm run db:setup` afterwards to rebuild it).
+- **Several copies of the repo:** Compose names the project after the folder, so two clones in folders with the same name share a container and volume, and `down -v` in one wipes the other. Set a different `COMPOSE_PROJECT_NAME` (and `POSTGRES_PORT`) in each `.env`.
+
+## Architecture
+```mermaid
+flowchart LR
+  B["Browser<br/>React SPA :5173"] -- "/api/* + HttpOnly cookie" --> V["Vite dev server<br/>proxy /api"]
+  V --> N["NestJS API :3000<br/>global JwtAuthGuard + RolesGuard"]
+  N -- "Prisma 7 + adapter-pg" --> P[("PostgreSQL 17<br/>Docker :5433")]
+```
+- **`frontend/`** (React 19, Vite, React Router, Zustand for auth state only, Axios, Tailwind v4): code is organised by feature (`features/auth`, `features/dashboard`, `features/users`) with shared helpers in `lib/` and API types in `types/`. A `ProtectedRoute` redirects to `/login` when there is no session.
+- **`backend/`** (NestJS, one module per domain): `auth` (login, session cookie, guards), `users` (list with search, filters, pagination), `dashboard` (metrics), `prisma` (database access) and `config` (environment validation). Controllers only handle HTTP; services hold the logic; DTOs validated with `class-validator`; user responses use an explicit Prisma `select`, so the password hash never leaves the API.
+- **Database:** a single `users` table (role and status enums, indexed by role, status and creation date). The schema and migration live in `backend/prisma/`, and `prisma/seed.ts` creates the 62 sample users.
+- **Request flow:** the browser calls `/api/...` on the Vite server, which proxies to the API. The API validates the cookie JWT (`JwtAuthGuard`), checks the role in the database where the route requires one (`RolesGuard`) and queries PostgreSQL through Prisma.
 
 ## Configuration
 Everything lives in one `.env` at the repo root (see `.env.example`, which documents each variable). The API refuses to start if `JWT_SECRET` is shorter than 32 characters or `DATABASE_URL` is missing. To see the expired-session flow, set `JWT_EXPIRES_IN_SECONDS=60`, restart the API and wait a minute.
@@ -58,6 +77,7 @@ Everything lives in one `.env` at the repo root (see `.env.example`, which docum
 - Logout clears the cookie but does not revoke the JWT, which stays valid until it expires (default 1 h). There is no refresh token.
 - The app only works through the Vite dev or preview server, because it depends on the `/api` proxy. There is no production deployment setup.
 - Only the database is containerized.
+- ADMIN and EDITOR currently have the same permissions: the app has no write actions (user CRUD is out of scope), so only VIEWER is restricted (no users table).
 - Automated test coverage is minimal; verification was mostly done with curl and manual checks (see `AI-LOG.md`).
 
 ## AI usage
