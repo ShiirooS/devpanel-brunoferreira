@@ -1,3 +1,4 @@
+import { UsersSection } from '../users/UsersSection';
 import { MetricsCards } from './MetricsCards';
 
 export function DashboardPage() {
@@ -7,6 +8,7 @@ export function DashboardPage() {
         <h1 className="text-2xl font-semibold">Dashboard</h1>
         <MetricsCards />
       </section>
+      <UsersSection />
     </div>
   );
 }
