@@ -5,7 +5,7 @@ Mini admin panel built for a 2-hour technical assessment: login, a dashboard wit
 **Stack:** React 19 + Vite + TypeScript + Tailwind v4 (frontend) · NestJS 12 + Prisma 7 + PostgreSQL 17 (backend). Only the database runs in Docker; the API and the web app run on your machine.
 
 ## Prerequisites
-- Node.js **>= 20.19** (22 LTS or 24 recommended) and npm
+- Node.js **20.19+, 22.12+ or 24+** (Vite 8 and Prisma 7 require it) and npm. On Node older than 22.22.3 / 24.15, `npm run setup` prints `EBADENGINE` warnings from a Nest CLI dependency; they are harmless (build and lint pass on Node 24.4.1), but 24.15+ avoids them.
 - Docker Desktop **running** (the first run pulls the `postgres:17-alpine` image, about 100 MB)
 - Free ports: 3000 (API), 5173 (web), 5433 (Postgres)
 
@@ -14,7 +14,7 @@ Mini admin panel built for a 2-hour technical assessment: login, a dashboard wit
 git clone https://github.com/ShiirooS/devpanel-brunoferreira.git
 cd devpanel-brunoferreira
 cp .env.example .env     # PowerShell: Copy-Item .env.example .env
-npm run setup            # installs everything, starts Postgres, applies the migration, seeds 60 users
+npm run setup            # installs everything, starts Postgres, applies the migration, seeds 60 users (a few minutes: three npm installs)
 npm run dev              # API on :3000 and web on :5173
 ```
 Open http://localhost:5173 and sign in:
